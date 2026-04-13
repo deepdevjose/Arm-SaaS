@@ -1,475 +1,365 @@
-# ARM Health Frontend Architecture
+# Arm Health AI — Frontend Architecture
+
+> **Last updated:** April 2026 · Aligned with current implementation
 
 ## 1. Purpose
 
-This document defines the frontend architecture for ARM Health, with a strong focus on performance, operational clarity, and enterprise-grade density. The interface must feel like a control plane for critical infrastructure, not a marketing website.
+This document defines the frontend architecture for Arm Health AI as it exists today. It covers the routing strategy, component model, i18n system, 3D visualization pipeline, rendering pattern, and design decisions made during the April 2026 implementation sprint.
 
-The frontend should support three primary experiences:
+The frontend serves three primary experiences:
 
-1. Public credibility through a technical landing page.
-2. A no-login demo console with realistic ARM fleet telemetry.
-3. A highly efficient authenticated operations console.
+1. **Public marketing site** — Technical credibility, conversion-optimized copy, and an interactive 3D Digital Twin demo.
+2. **Demo Console** — No-login sandbox with a realistic simulated robotic fleet (fleet table + alert stream).
+3. **Authenticated Operations Console** — Planned for Phase 2; will surface live telemetry, RUL forecasts, joint health, and alert management.
 
-## 2. Frontend Design Principles
+---
 
-- Optimize for information density, not whitespace.
-- Keep critical metrics visible without navigation friction.
-- Prefer server-rendered shells and streamed data over heavy client-only rendering.
-- Use client-side state only where interaction demands it.
-- Make every high-value screen usable on the first load.
-- Separate public demo data from tenant data at the route and API layers.
+## 2. Design Principles (Applied)
 
-## 3. Recommended Frontend Stack
+| Principle | Decision |
+|---|---|
+| Conversion over whitespace | Dense trust strip, HUD overlays on robot, proof metrics immediately visible |
+| B2B Asia density | Data-forward layout: metrics visible without interaction, compact panels |
+| Server-first rendering | All public pages are async Server Components; `'use client'` only where necessary |
+| i18n by default | Every string goes through `getDictionary()` — no hardcoded UI copy |
+| 3D as product evidence | The robot viewer IS the demo — not a decoration |
+| Premium aesthetic | ACES filmic, Bloom, nav glassmorphism, mega-menus, indigo brand palette |
 
-### Core Framework
+---
 
-- Next.js 15 with App Router.
-- React 19.
-- TypeScript.
-- Tailwind CSS.
+## 3. Tech Stack (Actual)
 
-### UI System
+### Core
 
-- shadcn/ui for composable primitives.
-- Radix UI under the hood for accessibility and behavior.
-- Custom design tokens for spacing, color, status, and typography.
-- Lucide icons for concise operational iconography.
+| Package | Version | Purpose |
+|---|---|---|
+| `next` | 15.x | App Router, Server Components, middleware |
+| `react` | 19.x | UI framework |
+| `typescript` | 5.x | Type safety |
 
-### Data and State
+### Styling
 
-- TanStack Query for server state, caching, refetching, and request deduplication.
-- Zustand for lightweight client state.
-- React Hook Form and Zod for form handling and validation.
-- TanStack Table for dense, virtualized operational tables.
+Vanilla CSS with a custom design system (`src/app/globals.css`). No Tailwind. Utility classes defined as CSS custom properties for spacing, color tokens, and component variants.
 
-### Visualization
+> **Why not Tailwind?** The project uses a custom CSS design system that predates the i18n sprint. Adding Tailwind would introduce a conflicting utility layer. Decision: remain on Vanilla CSS unless explicitly migrated.
 
-- ECharts or Recharts for compact telemetry charts.
-- Three.js or react-three-fiber for the digital twin and 3D asset views.
-- React virtual or row virtualization for large fleets and logs.
+### 3D Visualization
 
-### Realtime and Transport
+| Package | Purpose |
+|---|---|
+| `three` | WebGL math, geometry, materials |
+| `@react-three/fiber` | React renderer for Three.js scenes |
+| `@react-three/drei` | Helpers: `useGLTF`, `useAnimations`, `OrbitControls`, `SpotLight`, `Grid`, `AccumulativeShadows`, `useDepthBuffer` |
+| `@react-three/postprocessing` | Effects: `Bloom`, `Vignette`, `EffectComposer` |
 
-- Server-Sent Events for one-way live status streams where appropriate.
-- WebSockets for interactive control surfaces and live demo feeds.
-- Fetch-based route handlers for simple request/response interactions.
+### Internationalization
 
-### Quality and Tooling
+Custom implementation on top of Next.js App Router — no `next-intl` or `i18next` dependency.
 
-- ESLint and Prettier.
-- Vitest for unit tests.
-- Playwright for end-to-end tests.
-- Storybook for isolated component review if the team wants a stronger design system workflow.
+| File | Role |
+|---|---|
+| `src/middleware.ts` | Intercepts bare routes, redirects to `/en-US` |
+| `src/lib/i18n.ts` | `getDictionary(locale)` — server-only async loader |
+| `src/locales/en-US/common.json` | Full English dictionary |
+| `src/locales/zh-Hans/common.json` | Full Simplified Chinese dictionary |
 
-## 4. Architecture Goals for Performance
+---
 
-The frontend should be optimized around the following constraints:
+## 4. Folder Structure (Current)
 
-- Minimal client hydration on the landing page.
-- Server components by default.
-- Small interactive islands instead of large client bundles.
-- Streaming and incremental rendering for live dashboard views.
-- Memoization only where it solves a measured problem.
-- Virtualization for tables, logs, and any list that can exceed a few dozen rows.
-
-## 5. Route and Screen Architecture
-
-The route structure should map directly to product intent.
-
-- `/` - Technical landing page.
-- `/demo-console` - Public sandbox with simulated fleet data.
-- `/auth/login` - Email/password and SSO.
-- `/onboarding` - Technical onboarding questionnaire.
-- `/app` - Authenticated shell.
-- `/app/fleet` - Fleet overview.
-- `/app/nodes/[id]` - Node detail.
-- `/app/metrics` - Time-series telemetry and health trends.
-- `/app/logs` - Event and log explorer.
-- `/app/alerts` - Alert queue and alert history.
-- `/app/settings` - Tenant and user settings.
-
-```mermaid
-flowchart LR
-    Landing[Landing /] --> Demo[/demo-console]
-    Landing --> Login[/auth/login]
-    Demo --> Login
-    Login --> Onboarding[/onboarding]
-    Onboarding --> App[/app]
-    App --> Fleet[/app/fleet]
-    App --> Node[/app/nodes/:id]
-    App --> Metrics[/app/metrics]
-    App --> Logs[/app/logs]
-    App --> Alerts[/app/alerts]
-    App --> Settings[/app/settings]
 ```
-
-## 6. Rendering Strategy
-
-The application should follow a server-first model.
-
-- Public pages render primarily on the server.
-- Authenticated shells render on the server and hydrate only interactive regions.
-- Data-intensive views stream server-rendered placeholders first and fill in live data as it becomes available.
-- Charts and tables should be isolated as client components only when they need interactivity.
-
-```mermaid
-flowchart TB
-    U[User Request] --> RSC[Server Component Shell]
-    RSC --> HTML[Initial HTML]
-    HTML --> H[Light Hydration]
-    H --> I[Interactive Islands]
-    I --> LIVE[Realtime Widgets]
-```
-
-## 7. Frontend Shell Structure
-
-The authenticated console should use a persistent application shell:
-
-- Left navigation rail for fleet, nodes, metrics, logs, alerts, and settings.
-- Top command bar for tenant, region, environment, search, and session controls.
-- Main workspace for charts, tables, and 3D surfaces.
-- Right-side detail panel for selected node, alert, or log context.
-
-```mermaid
-flowchart TB
-    Shell[App Shell]
-    Shell --> Nav[Left Navigation Rail]
-    Shell --> Top[Top Command Bar]
-    Shell --> Main[Main Workspace]
-    Shell --> Panel[Detail Panel]
-    Main --> Charts[Charts and Trends]
-    Main --> Tables[Tables and Lists]
-    Main --> Twin[3D Digital Twin]
-    Main --> Logs[Event Stream]
-```
-
-## 8. Component Hierarchy
-
-The component model should stay modular and composable.
-
-### Foundation Components
-
-- Buttons, inputs, dialogs, drawers, tabs, menus, badges, tooltips.
-- Form fields with schema validation.
-- Status chips for health, risk, alert severity, and node state.
-
-### Domain Components
-
-- Fleet summary cards.
-- Node status table.
-- Telemetry chart grid.
-- Alert list and alert detail panel.
-- Log explorer with filters.
-- Digital twin canvas.
-- Maintenance recommendation panel.
-
-### Layout Components
-
-- App shell.
-- Section headers.
-- Split panes.
-- Responsive grid wrappers.
-- Collapsible side panels.
-
-### Screen Components
-
-- Landing hero and proof blocks.
-- Demo console workspace.
-- Login and onboarding screens.
-- Fleet dashboard.
-- Node detail page.
-
-## 9. Data Flow in the Browser
-
-The frontend should not fetch raw backend payloads directly in every component. Instead, it should use a view-model approach.
-
-```mermaid
-flowchart LR
-    API[Backend API] --> Hook[Query Hook]
-    Hook --> VM[View Model Mapper]
-    VM --> UI[Screen Components]
-    UI --> State[Local Interaction State]
-    State --> UI
-```
-
-Recommended pattern:
-
-- Query hooks fetch normalized domain data.
-- View model mappers adapt data to the screen layout.
-- Screen components stay mostly presentational.
-- Local state handles filters, selection, drawers, tabs, and expansion.
-
-## 10. State Management Strategy
-
-### Server State
-
-Use TanStack Query for:
-
-- Fleet inventory.
-- Node telemetry summaries.
-- Alert streams.
-- Log pages.
-- Authentication/session checks.
-
-### Client State
-
-Use Zustand for:
-
-- Selected node or region.
-- UI panel collapse state.
-- Table filters and column visibility.
-- Demo simulation controls.
-- User preferences that do not require persistence on every interaction.
-
-### Form State
-
-Use React Hook Form + Zod for:
-
-- Login.
-- Onboarding.
-- Tenant settings.
-- Alert routing configuration.
-
-## 11. Data Visualization Strategy
-
-The dashboard should support a dense operational reading pattern.
-
-- Use small multiples instead of large full-width charts.
-- Combine charts, tables, and status indicators on the same screen.
-- Keep chart interactions limited to the operations that matter: zoom, hover, filter, and drill-down.
-- Use strong semantic colors for healthy, warning, critical, and offline states.
-- Avoid decorative gradients that reduce legibility.
-
-### Primary Visual Blocks
-
-- Fleet health summary.
-- Region distribution.
-- Node status table.
-- Temperature and power trends.
-- RUL forecast chart.
-- Event timeline.
-- Maintenance queue.
-
-## 12. Frontend Data Contracts
-
-The UI should consume domain-oriented DTOs instead of backend-internal shapes.
-
-Suggested contracts:
-
-- Tenant summary.
-- Fleet summary.
-- Node summary.
-- Telemetry sample window.
-- Alert item.
-- Log entry.
-- Health forecast.
-- Digital twin state.
-
-The backend can evolve internally without forcing the UI to change constantly if these contracts remain stable.
-
-## 13. Realtime Update Model
-
-The demo console and authenticated console should support live updates without full-page refreshes.
-
-```mermaid
-sequenceDiagram
-    participant Browser as Frontend
-    participant Stream as SSE/WebSocket
-    participant API as BFF/API
-    participant Store as Query Cache
-    participant UI as Widgets
-
-    Browser->>API: Initial page request
-    API->>Browser: Server-rendered shell + initial data
-    Browser->>Stream: Open live connection
-    Stream->>Browser: Telemetry update
-    Browser->>Store: Merge new snapshot
-    Store->>UI: Re-render affected widgets
-```
-
-Implementation rules:
-
-- Update only the widgets affected by a new event.
-- Avoid re-rendering the entire dashboard on each telemetry tick.
-- Batch updates where possible.
-- Use throttling for rapidly changing graphs.
-
-## 14. Demo Console Architecture
-
-The demo console should behave like a production system, but with fully simulated data.
-
-```mermaid
-flowchart TB
-    DEMO[/demo-console/] --> GEN[Demo Data Generator]
-    GEN --> FLEET[Fleet Grid]
-    GEN --> CHARTS[Metric Charts]
-    GEN --> ALERTS[Alert Stream]
-    GEN --> TWIN[3D Twin]
-    FLEET --> DETAIL[Node Detail Drawer]
-    CHARTS --> DETAIL
-    ALERTS --> DETAIL
-    TWIN --> DETAIL
-```
-
-Demo requirements:
-
-- Live-looking values with deterministic simulation.
-- Multiple nodes and regions visible at once.
-- Drill-down interactions identical to production.
-- Clear distinction between simulated and authenticated environments.
-
-## 15. Authenticated App Flow
-
-```mermaid
-flowchart LR
-    Login[Login] --> Check[Session Check]
-    Check --> Onboard[Technical Onboarding]
-    Onboard --> Shell[Authenticated Shell]
-    Shell --> Fleet[Fleet Overview]
-    Shell --> Node[Node Detail]
-    Shell --> Metrics[Metrics]
-    Shell --> Logs[Logs]
-    Shell --> Alerts[Alerts]
-```
-
-The onboarding screen should request only technical parameters:
-
-- Infrastructure type.
-- Node count.
-- Region.
-- Workload type.
-
-## 16. Performance Optimization Plan
-
-### Build-Time Optimization
-
-- Keep package count low and dependencies intentional.
-- Split heavy visualization libraries into lazy-loaded chunks.
-- Use route-level code splitting.
-- Avoid importing charting or Three.js libraries into public pages.
-
-### Runtime Optimization
-
-- Prefer server components for static or semi-static UI.
-- Lazy-load the digital twin and advanced chart panels.
-- Virtualize long tables and logs.
-- Cache network requests aggressively where freshness allows it.
-- Use skeletons instead of blank loading states.
-
-### Bundle Optimization
-
-- Tree-shake unused icon and UI imports.
-- Separate public and authenticated bundles where practical.
-- Load demo-only dependencies only on `/demo-console`.
-- Keep shared UI primitives lightweight.
-
-### Rendering Optimization
-
-- Avoid prop drilling through large dashboard trees.
-- Keep chart props stable.
-- Use derived selectors for expensive table transformations.
-- Recompute health summaries only when the underlying dataset changes.
-
-## 17. Accessibility and Usability
-
-Even though the interface is dense, it must remain usable.
-
-- Use semantic HTML and accessible primitives.
-- Ensure keyboard navigation across menus, tables, drawers, and dialogs.
-- Maintain readable contrast for all status colors.
-- Provide clear focus states.
-- Avoid depending on color alone for critical state.
-
-## 18. Testing Strategy
-
-### Unit Tests
-
-- Component rendering.
-- Status mapping.
-- Filters and sorting.
-- View model transformations.
-
-### Integration Tests
-
-- Auth flow.
-- Onboarding flow.
-- Demo console interactions.
-- Fleet drill-down.
-
-### End-to-End Tests
-
-- Landing to demo.
-- Demo to login.
-- Login to onboarding.
-- Authenticated fleet and node views.
-- Alert simulation and detail inspection.
-
-```mermaid
-flowchart TB
-    UT[Unit Tests] --> IT[Integration Tests]
-    IT --> E2E[End-to-End Tests]
-    E2E --> CI[CI Pipeline]
-```
-
-## 19. Suggested Folder Structure
-
-```text
 src/
-  app/
-    (public)/
-      page.tsx
-      demo-console/page.tsx
-      auth/login/page.tsx
-    (onboarding)/
-      onboarding/page.tsx
-    (app)/
-      app/layout.tsx
-      app/page.tsx
-      app/fleet/page.tsx
-      app/nodes/[id]/page.tsx
-      app/metrics/page.tsx
-      app/logs/page.tsx
-      app/alerts/page.tsx
-      app/settings/page.tsx
-  components/
-    ui/
-    layout/
-    dashboard/
-    fleet/
-    node/
-    metrics/
-    logs/
-    alerts/
-    twin/
-  features/
-    auth/
-    onboarding/
-    demo/
-    fleet/
-    telemetry/
-    alerts/
-    settings/
-  lib/
-    api/
-    auth/
-    data/
-    validation/
-    formatters/
-    constants/
+├── app/
+│   ├── [locale]/                        ← BCP-47 dynamic locale segment
+│   │   ├── layout.tsx                   ← Async root layout; awaits params, sets <html lang>
+│   │   ├── (public)/
+│   │   │   ├── layout.tsx               ← Loads getDictionary, passes to PublicShell
+│   │   │   ├── page.tsx                 ← Landing (Hero + Process + FeatureSplit + ContactCta)
+│   │   │   ├── platform/page.tsx
+│   │   │   ├── digital-twin/page.tsx    ← 3D viewer + joint feature cards
+│   │   │   ├── ai-engine/page.tsx       ← LSTM explainer + RUL chart
+│   │   │   ├── fleet/page.tsx           ← Fleet metrics + map placeholder
+│   │   │   ├── use-cases/page.tsx       ← Industry case cards
+│   │   │   ├── demo-console/page.tsx    ← Fleet table + alert stream
+│   │   │   └── pricing/page.tsx
+│   │   ├── (onboarding)/                ← ← Planned Phase 2
+│   │   └── (app)/                       ← ← Planned Phase 2
+│   └── globals.css                      ← Design system tokens + component styles
+├── components/
+│   ├── home/
+│   │   ├── Hero.tsx                     ← Eyebrow + headline + CTAs + HUD + trust strip
+│   │   ├── ProcessSection.tsx
+│   │   ├── FeatureSplit.tsx
+│   │   └── ContactCta.tsx
+│   ├── layout/
+│   │   ├── Header.tsx                   ← Glassmorphism nav + mega-menus + language switcher
+│   │   ├── Footer.tsx
+│   │   └── public-shell.tsx             ← Injects dict into Header + Footer
+│   ├── three/
+│   │   ├── RobotViewer.tsx              ← R3F Canvas; SceneSetup, SceneLights, RobotModel, BaseGlow
+│   │   └── RobotViewerClient.tsx        ← 'use client' wrapper with next/dynamic ssr:false
+│   └── ui/
+│       ├── badge.tsx
+│       └── card.tsx
+├── lib/
+│   ├── i18n.ts                          ← getDictionary() — server-only
+│   └── mock-data.ts                     ← Simulated fleet nodes + alert entries
+├── locales/
+│   ├── en-US/common.json
+│   └── zh-Hans/common.json
+└── middleware.ts                        ← Locale detection + redirect
 ```
 
-## 20. Implementation Order
+---
 
-1. Establish design tokens, layout primitives, and routing.
-2. Build the landing page and demo console shell.
-3. Implement auth, session checks, and onboarding.
-4. Build fleet overview, node detail, metrics, logs, and alerts.
-5. Add realtime streams, virtualization, and digital twin rendering.
-6. Harden testing, accessibility, and bundle optimization.
+## 5. Rendering Strategy
 
-## 21. Open Questions
+```mermaid
+flowchart TB
+    U[User Request /en-US/digital-twin] --> MW[middleware.ts]
+    MW --> LC[locale resolved: en-US]
+    LC --> ROOT["app/[locale]/layout.tsx (async Server Component)"]
+    ROOT --> DICT["getDictionary('en-US') — server-only"]
+    DICT --> SHELL["PublicShell — Server Component"]
+    SHELL --> HEADER["Header (dict.nav)"]
+    SHELL --> PAGE["digital-twin/page.tsx (async Server)"]
+    PAGE --> CLIENT["RobotViewerClient (use client, dynamic ssr:false)"]
+    CLIENT --> R3F["RobotViewer — Three.js Canvas"]
+```
 
-- Should the demo console and authenticated console share the same component library or have separate shell configurations?
-- Do we want the first release to support dark mode only, or both light and dark enterprise themes?
-- Which telemetry pages should support export from day one?
-- Should the digital twin be a first-class screen or a secondary panel in v1?
+**Rules:**
+- All `app/[locale]/**/page.tsx` are **async Server Components** — they call `getDictionary()` directly.
+- `'use client'` is used only for: `Header` (scroll state), `RobotViewerClient` (Three.js), `Footer` (if needed).
+- `next/dynamic` with `ssr: false` must live inside a `'use client'` component — never in a Server Component.
+- The `[locale]/layout.tsx` must `await params` before accessing `params.locale` (Next.js 15 requirement).
+
+---
+
+## 6. Component Patterns
+
+### Server Component (public page)
+```tsx
+// src/app/[locale]/(public)/fleet/page.tsx
+export default async function FleetPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const { common } = await getDictionary(locale);
+  const t = common.fleet;
+  return <main>{t.title}</main>;
+}
+```
+
+### Client Component with SSR-disabled 3D
+```tsx
+// src/components/three/RobotViewerClient.tsx
+'use client';
+const RobotViewerDynamic = dynamic(
+  () => import('./RobotViewer').then(m => m.RobotViewer),
+  { ssr: false, loading: () => <Spinner /> }
+);
+export function RobotViewerClient(props) { return <RobotViewerDynamic {...props} />; }
+```
+
+### R3F Hook Rule
+R3F hooks (`useDepthBuffer`, `useFrame`, `useThree`, `useGLTF`) can **only** be called inside the R3F component tree (inside `<Canvas>`). They must live in child components, not in the component that renders `<Canvas>`.
+
+```tsx
+// ✅ Correct
+function SceneLights() {
+  const depthBuffer = useDepthBuffer({ frames: 1 }); // inside Canvas tree
+  return <SpotLight depthBuffer={depthBuffer} ... />;
+}
+
+// ❌ Wrong — useDepthBuffer outside Canvas
+function RobotViewer() {
+  const depthBuffer = useDepthBuffer({ frames: 1 }); // Runtime error!
+  return <Canvas><SceneLights /></Canvas>;
+}
+```
+
+---
+
+## 7. Hero Component Architecture
+
+The Hero is the most architecturally rich public component — it combines copy, CTAs, 3D viewer, HUD overlays, and trust metrics.
+
+```mermaid
+flowchart TB
+    Hero["Hero (Server Component)"] --> Eyebrow[/Badge pill — eyebrow/]
+    Hero --> H1[h1 — headline]
+    Hero --> CTAs["CTAs: Start Monitoring (primary) + Watch Demo (secondary)"]
+    Hero --> ViewerWrapper["3D Viewer Container"]
+    ViewerWrapper --> StatusBar[Top status bar — animated signal bars]
+    ViewerWrapper --> LeftHUD["HUD Left: STATUS, RUL, ANOMALY"]
+    ViewerWrapper --> RightHUD["HUD Right: TEMP, VIBRATION, LOAD"]
+    ViewerWrapper --> RC[RobotViewerClient]
+    Hero --> Trust["TrustStrip — 4 proof metrics"]
+```
+
+**HUD cards** are CSS-positioned `div` elements layered over the `<Canvas>` with `pointer-events: none`. They use `backdrop-blur + bg-black/60 + border-white/10` for the glassmorphism effect.
+
+---
+
+## 8. Header / Navigation
+
+The Header is a client component (needs scroll state) with:
+
+- **Glassmorphism:** `backdrop-blur + bg-[#0a0f25]/80 + border-b border-white/10`
+- **Mega-menus:** CSS hover groups using Tailwind-compatible class composition
+- **Language switcher:** Globe icon → opens locale picker (routes to `/{locale}/...`)
+- **CTAs:** `Start Free Trial` (primary pill button) + Login icon
+
+**Nav structure (current):**
+```
+Product ▾          Use Cases ▾       Pricing    Docs ▾
+  ├ Overview         ├ Manufacturing
+  ├ Digital Twin     ├ Welding Robots
+  ├ AI Engine        ├ Assembly Lines
+  └ Fleet            └ Capabilities
+```
+
+Dictionary keys: `nav.product`, `nav.platform`, `nav.fleet`, `nav.useCases`, `nav.pricing`, `nav.resources`, `nav.signup`
+
+---
+
+## 9. Internationalization Flow
+
+```mermaid
+flowchart LR
+    MW[middleware.ts] -->|locale cookie / Accept-Language| DEFAULT["default: en-US"]
+    DEFAULT --> LC["app/[locale]/layout.tsx"]
+    LC -->|await params.locale| DICT["getDictionary(locale)"]
+    DICT -->|returns common JSON| SHELL[PublicShell]
+    SHELL -->|dict.nav| HEADER[Header]
+    SHELL -->|dict.nav| FOOTER[Footer]
+    SHELL --> PAGE[Page]
+    PAGE -->|dict.home / dict.fleet / ...| SECTIONS[Sections & Components]
+```
+
+**Dictionary prop flow:** Each page receives `dict` from `getDictionary()` and threads the relevant sub-object (`dict.common.home`, `dict.common.fleet`…) down to its components as props. No global context is used.
+
+---
+
+## 10. 3D Viewer Pipeline
+
+```mermaid
+flowchart TB
+    GW["/models/siasunsr12a.glb"] --> GLTF["useGLTF — loads scene + animations"]
+    GLTF --> ANIM["useAnimations — plays built-in clips if present"]
+    GLTF --> FIT["Box3 auto-fit — centers + grounds model at y=0"]
+    FIT --> PRIM["primitive object={scene}"]
+    PRIM --> MESH["Shadow casting on all Mesh children"]
+
+    CANVAS["Canvas (ACESFilmic, shadows, dpr=[1,2])"] --> SETUP[SceneSetup — bg #07091a + fog]
+    CANVAS --> LIGHTS["SceneLights — 3× SpotLight (indigo / amber / deep-blue)"]
+    CANVAS --> SUSPENSE[Suspense]
+    SUSPENSE --> ROBOT[RobotModel group]
+    SUSPENSE --> SHADOW[AccumulativeShadows + BakeShadows]
+    SUSPENSE --> GRID["Grid — infinite indigo grid floor"]
+    CANVAS --> FX["EffectComposer — Bloom + Vignette"]
+    CANVAS --> ORBIT["OrbitControls — drag/zoom, target y=0.9"]
+```
+
+**Camera defaults:**
+- `fov: 38` · `near: 0.1` · `far: 100`
+- Default position: `[0, 1.8, 3.8]`
+- Hero position: `[0, 1.8, 3.8]`  
+- Digital Twin position: `[0, 2, 4]`
+
+---
+
+## 11. Performance Decisions
+
+| Decision | Rationale |
+|---|---|
+| `next/dynamic` for R3F | Three.js is ~900KB; SSR of a WebGL canvas makes no sense |
+| Server Components for all pages | Zero hydration cost for marketing content |
+| `getDictionary` is `server-only` | Prevents accidental client-side bundle inclusion of locale files |
+| `BakeShadows` in 3D scene | Bakes static shadow passes; reduces per-frame GPU cost |
+| `dpr={[1, 2]}` on Canvas | Caps at 2× retina; prevents 3× DPR on high-density displays |
+| `AccumulativeShadows frames={80}` | High-quality shadows baked over 80 frames at startup |
+| Spinner loading state | Shows indigo animated ring; avoids layout shift during dynamic load |
+
+---
+
+## 12. Demo Console
+
+The public demo console (`/demo-console`) renders entirely with simulated data from `src/lib/mock-data.ts`. No backend call is made.
+
+```mermaid
+flowchart TB
+    PAGE[demo-console/page.tsx] --> DICT[getDictionary]
+    PAGE --> MOCK[mock-data.ts]
+    MOCK --> FLEET[demoFleet — 4 node objects]
+    MOCK --> ALERTS[demoAlerts — 5 alert objects]
+    FLEET --> TABLE[Fleet Node Table]
+    ALERTS --> STREAM[Alert Stream]
+```
+
+Fleet node shape:
+```ts
+{ id, region, status, temperature, cpu, memory, rul }
+```
+
+Alert shape:
+```ts
+{ id, title, node, time, level: 'critical' | 'warning' | 'info' }
+```
+
+All table headers and badges use `dict.demo.*` keys for full i18n.
+
+---
+
+## 13. Planned — Phase 2 (Authenticated Console)
+
+When Phase 2 begins, the authenticated console will live under `/(app)/*` within the `[locale]` segment and will add:
+
+- Live WebSocket / SSE telemetry streams
+- TanStack Query for server state and request deduplication
+- Zustand for UI state (selected node, filter state, panel collapse)
+- `/app/fleet` — multi-node health overview
+- `/app/nodes/[id]` — per-joint telemetry drill-down
+- `/app/alerts` — alert queue + work order generation
+- `/app/metrics` — time-series charts (ECharts or Recharts)
+
+The 3D Digital Twin `RobotViewer` will be embedded in the Node Detail page as a side panel.
+
+---
+
+## 14. GLB Rigging — Next Steps
+
+> The current SIASUN SR12A GLB is a CAD export. All joint segments are siblings under the root node — not a kinematic chain. Joint-level articulation animation is not possible without rigging.
+
+**To enable full joint animation in Blender:**
+
+1. Open `public/models/siasunsr12a.glb` in Blender
+2. Add Armature → create 6 bones: `J1` (base) through `J6` (tool)
+3. Parent each mesh segment to its corresponding bone (`Parent → Bone`)
+4. Set rest pose and keyframe a pick-and-place animation cycle
+5. Export as GLB with: `Include → Armature ✓`, `Animation → NLA Strips ✓`
+6. Replace `public/models/siasunsr12a.glb` — `useAnimations` will detect and play the clips automatically
+
+---
+
+## 15. Implementation Checklist
+
+| Item | Status |
+|---|---|
+| `[locale]` dynamic routing | ✅ |
+| Middleware locale redirect | ✅ |
+| `getDictionary()` server-only loader | ✅ |
+| `en-US` full dictionary | ✅ |
+| `zh-Hans` full dictionary | ✅ |
+| Header + language switcher | ✅ |
+| Hero redesign (strong headline + CTAs + HUD) | ✅ |
+| Trust strip (4 proof metrics) | ✅ |
+| 3D SIASUN viewer (GLB + lighting + post-processing) | ✅ |
+| Digital Twin page | ✅ |
+| AI Engine page | ✅ |
+| Fleet page | ✅ |
+| Use Cases page | ✅ |
+| Demo Console (simulated) | ✅ |
+| Pricing page | ✅ |
+| GLB rigging (Blender) | 🔲 |
+| Auth + onboarding flow | 🔲 |
+| Authenticated app shell | 🔲 |
+| Live telemetry integration | 🔲 |
