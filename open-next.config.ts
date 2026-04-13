@@ -13,7 +13,7 @@ const config: OpenNextConfig = {
   },
   edgeExternals: ["node:crypto"],
   middleware: {
-    external: true,
+    external: false,
     override: {
       wrapper: "cloudflare-edge",
       converter: "edge",
