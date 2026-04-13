@@ -1,287 +1,296 @@
-# ARM Health SaaS Architecture
+# Arm Health AI — System Architecture
+
+> **Last updated:** April 2026 · Aligned with current implementation
 
 ## 1. Product Definition
 
-ARM Health is an infrastructure monitoring and predictive maintenance SaaS for enterprise ARM-based device fleets. The platform is designed for operational teams that need telemetry, diagnostics, alerting, and optimization rather than consumer-facing workflows.
+**Arm Health AI** is a SaaS predictive maintenance platform for industrial robotic arms (6-axis). It provides real-time AI-powered Digital Twins, joint telemetry monitoring, Remaining Useful Life (RUL) prediction, anomaly detection, and automated maintenance alerting.
 
-The product is intentionally closer to Alibaba Cloud, Huawei Cloud, Datadog, and Grafana than to a traditional marketing-led SaaS website. The UI must prioritize density, speed, and direct control.
+The platform targets operational teams in automotive, semiconductor, aerospace, and healthcare manufacturing — environments where robotic arm downtime costs $22,000+ per minute.
+
+The product occupies the intersection of Industrial IoT and AI-driven predictive maintenance. The interface is optimized for technical credibility and conversion, with information density suited to the Chinese B2B market.
+
+---
 
 ## 2. Core Product Principles
 
-- High information density with multiple metrics visible at once.
-- Minimal decorative treatment and no emotional onboarding patterns.
-- Operational language, not consumer language.
-- Drill-down first: fleet -> region -> node -> device -> metric -> event.
-- Demo before login: visitors should be able to inspect a realistic sandbox immediately.
+- **Predict, don't react.** Every screen should reinforce the shift from scheduled maintenance to AI-driven prediction.
+- **Demo before login.** Visitors can explore a realistic sandboxed fleet immediately — no registration required.
+- **Data density over whitespace.** Dashboard-first UX designed for operational teams and B2B buyers.
+- **Drill-down hierarchy:** Fleet → Node → Joint → Metric → Alert → Work Order.
+- **Bilingual from day one.** Full `en-US` and `zh-Hans` support across all routes (BCP-47 standard).
 
-## 3. Recommended Stack
+---
 
-### Frontend
+## 3. Production Stack
 
-- Next.js 15 with React 19.
-- TypeScript.
-- Tailwind CSS for layout speed and consistent density.
-- shadcn/ui for composable primitives.
-- Recharts or ECharts for compact dashboards.
-- Three.js or react-three-fiber for the digital twin and node visualization.
-- TanStack Query for server state and real-time refetch orchestration.
-- Zustand for local UI state.
+### Frontend (Implemented)
 
-### Backend
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 15 (App Router) + React 19 + TypeScript |
+| Styling | Vanilla CSS with custom design system (no Tailwind) |
+| 3D Visualization | Three.js, React Three Fiber (`@react-three/fiber`) |
+| 3D Helpers | `@react-three/drei` (OrbitControls, SpotLight, Grid, AccumulativeShadows…) |
+| Post-processing | `@react-three/postprocessing` (Bloom, Vignette, ACES Filmic tone mapping) |
+| Internationalization | BCP-47 dynamic locale routing (`[locale]` segment) + custom `getDictionary()` |
+| Robot Model | SIASUN SR12A — GLB format at `public/models/siasunsr12a.glb` |
 
-- FastAPI for the API layer.
-- Python for telemetry processing, model inference, and business rules.
-- WebSocket or Server-Sent Events for live console updates.
-- Celery or a lightweight task queue for alert jobs and background processing.
+### Backend (Target Architecture)
+
+| Layer | Technology |
+|---|---|
+| API Layer | FastAPI (Python) |
+| AI / Inference | Python · LSTM model (TensorFlow / Keras) |
+| IoT Ingestion | Edge Gateway simulation · Python preprocessing scripts |
+| Telemetry Pipeline | Event queue → AI inference → Rules Engine → Alert |
+| Alert Automation | N8N workflow orchestration |
+| Realtime | WebSocket / Server-Sent Events for live console updates |
 
 ### Data Layer
 
-- PostgreSQL for tenants, users, assets, alerts, and audit logs.
-- TimescaleDB extension or a dedicated time-series model for telemetry.
-- Redis for cache, sessions, and transient state.
-- Object storage for raw telemetry batches, model artifacts, and export bundles.
-
-### AI and Simulation
-
-- Python ML services for RUL prediction and anomaly scoring.
-- Synthetic telemetry generator for the demo console.
-- Rule engine for thresholds, health state transitions, and alert escalation.
+| Store | Purpose |
+|---|---|
+| PostgreSQL | Tenants, users, assets, alerts, audit logs |
+| TimescaleDB | Joint telemetry time-series (J1–J6: vibration, temperature, current, position) |
+| Redis | Cache, sessions, transient state |
+| Object Storage | Model artifacts, raw telemetry batches, export bundles |
 
 ### Infrastructure
 
-- Docker for local and CI execution.
-- Kubernetes for production workloads.
-- Nginx or a managed ingress layer for routing and TLS termination.
-- OpenTelemetry for tracing and metrics across services.
-- Prometheus and Grafana for internal observability of the platform itself.
+- Docker for local development and CI
+- Kubernetes for production workloads
+- Nginx / managed ingress for routing and TLS
+- OpenTelemetry + Prometheus + Grafana for observability
 
-## 4. Web Architecture
+---
 
-The web app should be organized around three entry paths:
+## 4. Route Architecture (Current)
 
-1. Public landing page for technical credibility.
-2. Demo console for instant product exploration without login.
-3. Authenticated operations console for enterprise users.
+All public routes live under the `[locale]` dynamic segment for i18n:
 
-After login, the application should move quickly into fleet visibility and operational drill-down, not into soft onboarding screens.
+```
+/en-US/                     ← Landing page (Hero + ProcessSection + FeatureSplit + ContactCta)
+/en-US/platform             ← Platform overview + feature pipeline
+/en-US/digital-twin         ← 3D Digital Twin page (SIASUN SR12A interactive viewer)
+/en-US/ai-engine            ← LSTM model explainer + RUL chart
+/en-US/fleet                ← Fleet monitoring dashboard
+/en-US/use-cases            ← Industry use cases
+/en-US/demo-console         ← Public sandbox (simulated fleet + alert stream)
+/en-US/pricing              ← Pricing tiers
+
+/zh-Hans/*                  ← Full Simplified Chinese versions of all above routes
+
+/(onboarding)/*             ← Technical onboarding flow (planned)
+/(app)/*                    ← Authenticated operations console (planned)
+```
+
+The middleware (`src/middleware.ts`) intercepts bare routes (`/`) and redirects to the default locale (`/en-US`).
 
 ```mermaid
 flowchart LR
-    A[Landing Page] --> B[/demo-console/]
-    A --> C[Enterprise Login]
-    B --> C
-    C --> D[Technical Onboarding]
-    D --> E[Operations Dashboard]
-    E --> F[Fleet Drill-Down]
-    F --> G[Node Detail]
-    G --> H[Metrics / Logs / Alerts]
+    Root[/] -->|middleware redirect| EN[/en-US/]
+    EN --> Demo[/en-US/demo-console]
+    EN --> Twin[/en-US/digital-twin]
+    EN --> Login[/auth/login ← planned]
+    Demo --> Login
+    Login --> Onboard[/(onboarding) ← planned]
+    Onboard --> App[/(app) ← planned]
+    App --> Fleet[/app/fleet]
+    App --> Node[/app/nodes/:id]
+    App --> Alerts[/app/alerts]
 ```
 
-## 5. Frontend Route Map
+---
 
-The route structure should remain simple and explicit.
-
-- `/` - Landing page.
-- `/demo-console` - Public sandbox with fake but credible ARM fleet data.
-- `/auth/login` - Email/password plus SSO entry.
-- `/onboarding` - Technical intake form for infrastructure setup.
-- `/app` - Main authenticated console.
-- `/app/fleet` - Fleet overview.
-- `/app/nodes/[id]` - Node detail page.
-- `/app/metrics` - Metrics and health history.
-- `/app/logs` - Event and log exploration.
-- `/app/alerts` - Active and historical alerts.
-
-## 6. Experience Flow
-
-### 6.1 Landing to Demo
-
-The landing page should establish trust through concrete product evidence: architecture diagrams, live system stats, supported environments, and example alerts. The primary call to action should be the demo console, not login.
-
-### 6.2 Demo Console
-
-The demo console should simulate:
-
-- Active ARM nodes across one or more regions.
-- CPU, memory, temperature, power, and thermal throttling indicators.
-- Health scores and predicted degradation trends.
-- Alert stream entries and maintenance recommendations.
-- Drill-down from fleet view to node view to metric panels.
-
-### 6.3 Login
-
-Login should support:
-
-- Email and password.
-- Enterprise SSO.
-- Persistent sessions.
-- Optional MFA in a later phase.
-
-### 6.4 Onboarding
-
-The onboarding flow should ask for only technical inputs:
-
-- Infrastructure type.
-- Node count.
-- Region.
-- Workload type such as AI, compute, or edge.
-
-No marketing-style onboarding, animations, or social content should appear here.
-
-## 7. System Architecture
+## 5. Full System Architecture
 
 ```mermaid
 flowchart TB
-    subgraph Web[Web Layer]
-        L[Landing]
-        D[Demo Console]
-        A[Authenticated Console]
+    subgraph Web["Web Layer (Next.js App Router)"]
+        LANDING[Landing Page]
+        DEMO[Demo Console]
+        TWIN[Digital Twin Viewer]
+        APP[Authenticated Console ← planned]
     end
 
-    subgraph Edge[Edge and Ingestion]
-        G[Telemetry Gateway]
-        S[Simulation Service]
+    subgraph i18n["i18n Layer"]
+        MW[Middleware — locale detection]
+        DICT[getDictionary — JSON loader]
+    end
+
+    subgraph Edge["Edge & Ingestion"]
+        SENSORS[IoT Sensors J1–J6]
+        GW[Edge Gateway]
         Q[Event Queue]
+        SIM[Demo Simulator]
     end
 
-    subgraph Core[Core Services]
-        API[API Gateway / BFF]
-        AUTH[Auth Service]
-        TENANT[Tenant Service]
-        ASSET[Asset and Fleet Service]
+    subgraph AI["AI & Rules"]
+        LSTM[LSTM Inference Service]
+        RUL[RUL Calculator]
+        RULES[Rules Engine — thresholds]
         ALERT[Alert Service]
-        RULES[Rules Engine]
-        AI[Inference Service]
+        N8N[N8N Workflow Automation]
     end
 
-    subgraph Data[Data Layer]
+    subgraph Data["Data Layer"]
         PG[(PostgreSQL)]
-        TS[(Time-series Store)]
+        TS[(TimescaleDB — Telemetry)]
         REDIS[(Redis)]
-        OBJ[(Object Storage)]
+        OBJ[(Object Storage — Model artifacts)]
     end
 
-    subgraph Obs[Observability]
+    subgraph Obs["Observability"]
         OTEL[OpenTelemetry]
         PROM[Prometheus]
         GRAF[Grafana]
     end
 
-    L --> D
-    L --> A
-    D --> API
-    A --> API
-    API --> AUTH
-    API --> TENANT
-    API --> ASSET
-    API --> ALERT
-    API --> RULES
-    API --> AI
+    MW --> DICT
+    LANDING --> DEMO
+    LANDING --> TWIN
+    LANDING --> APP
+    DEMO --> SIM
+    SIM --> DEMO
 
-    S --> G
-    G --> Q
-    Q --> AI
+    SENSORS --> GW --> Q
+    Q --> LSTM --> RUL --> RULES --> ALERT --> N8N
     Q --> TS
-    AI --> RULES
-    RULES --> ALERT
 
-    AUTH --> PG
-    TENANT --> PG
-    ASSET --> PG
+    APP --> PG
     ALERT --> PG
-    RULES --> PG
-    AI --> OBJ
-    API --> REDIS
+    LSTM --> OBJ
+    APP --> REDIS
 
-    API --> OTEL
-    AI --> OTEL
-    ALERT --> OTEL
-    OTEL --> PROM
-    PROM --> GRAF
+    OTEL --> PROM --> GRAF
 ```
 
-## 8. Real-Time Data Flow
+---
 
-Telemetry should move through the system in a controlled pipeline so the UI can stay responsive even when event rates increase.
+## 6. AI Pipeline — RUL Prediction
 
 ```mermaid
 sequenceDiagram
-    participant Device as ARM Node
-    participant Gateway as Edge Gateway
-    participant Bus as Event Queue
-    participant AI as Inference Service
+    participant Sensor as IoT Sensor (J1–J6)
+    participant GW as Edge Gateway
+    participant Queue as Event Queue
+    participant LSTM as LSTM Model
     participant Rules as Rules Engine
-    participant Web as Web Console
+    participant Alert as Alert Service
+    participant UI as Digital Twin / Fleet Dashboard
 
-    Device->>Gateway: Emit telemetry batch
-    Gateway->>Bus: Forward normalized payload
-    Bus->>AI: Deliver current window
-    AI->>AI: Compute health score and RUL
-    AI->>Rules: Publish prediction result
-    Rules->>Web: Push alert or state change
-    Web->>Web: Update charts, tables, and status panels
+    Sensor->>GW: Emit telemetry batch (vibration, temp, current, position)
+    GW->>Queue: Forward normalized payload
+    Queue->>LSTM: Deliver sliding time window
+    LSTM->>LSTM: Compute health score + RUL
+    LSTM->>Rules: Publish prediction result
+    Rules->>Alert: Trigger if RUL < 72h threshold
+    Alert->>UI: Push alert + update Digital Twin overlay
+    UI->>UI: Update HUD (STATUS, RUL, TEMP, ANOMALY SCORE)
 ```
 
-## 9. Console Layout Strategy
+**Target performance:** >95% prediction accuracy · 72+ hours failure lead time · <100ms telemetry latency
 
-The authenticated console should follow a split-density layout:
+---
 
-- Left rail for fleet and navigation.
-- Top bar for tenant, region, environment, and user controls.
-- Main grid for charts, maps, status cards, and logs.
-- Right-side detail panel for the selected node or alert.
+## 7. Internationalization Architecture
 
-The default dashboard should include:
+The i18n system uses Next.js App Router's dynamic `[locale]` segment with BCP-47 locale identifiers.
 
-- Fleet health summary.
-- Node status table.
-- Time-series telemetry charts.
-- Active alerts feed.
-- Degradation and RUL trend panel.
-- Recent logs and anomaly events.
-
-## 10. Deployment Model
-
-```mermaid
-flowchart LR
-    U[Enterprise User] --> CDN[CDN / Edge]
-    CDN --> WEB[Next.js Frontend]
-    WEB --> API[FastAPI BFF]
-    API --> SVC[Core Services]
-    SVC --> DB[(PostgreSQL / Time-series)]
-    SVC --> CACHE[(Redis)]
-    SVC --> OBJ[(Object Storage)]
-    SVC --> AI[Inference and Rules]
-    AI --> MQ[Queue / Stream]
+```
+src/
+├── middleware.ts                  ← Intercepts bare routes, redirects to /en-US
+├── app/[locale]/
+│   ├── layout.tsx                 ← Async root layout: awaits params.locale, sets <html lang>
+│   └── (public)/
+│       ├── layout.tsx             ← Loads getDictionary(locale), injects into PublicShell
+│       └── */page.tsx             ← Each page calls getDictionary and uses common.[section]
+├── locales/
+│   ├── en-US/common.json          ← English strings (home, nav, platform, fleet, demo…)
+│   └── zh-Hans/common.json        ← Simplified Chinese strings
+└── lib/
+    └── i18n.ts                    ← getDictionary() — server-only loader
 ```
 
-Recommended deployment path:
+**Supported locales:** `en-US` (default), `zh-Hans`  
+**Planned:** `zh-Hant` (Traditional Chinese)
 
-- Frontend on a managed web platform or containerized ingress.
-- API and worker services on Kubernetes.
-- Managed database with backups and read replicas.
-- Dedicated observability stack from day one.
+Dictionary namespace structure:
 
-## 11. Key Product Decisions
+```json
+{
+  "home":       { "title", "subtitle", "ctaStart", "ctaDemo", "trustStat1…4" },
+  "nav":        { "product", "platform", "fleet", "pricing", "resources"… },
+  "platform":   { "title", "subtitle", "feat1Title"… },
+  "digitalTwin":{ "title", "demoTitle", "feat1Title"… },
+  "aiEngine":   { "title", "lstmTitle", "valTitle"… },
+  "fleet":      { "title", "nodes", "healthy", "warning", "critical"… },
+  "useCases":   { "title", "tag1", "desc1"… },
+  "demo":       { "title", "fleetNodes", "colNode", "colRul", "alerts"… },
+  "cta":        { "title", "demo", "talk", "healthTitle"… }
+}
+```
 
-- Use a BFF layer so the frontend gets dashboard-ready payloads instead of raw service responses.
-- Keep demo data isolated from tenant data.
-- Design every major screen for side-by-side comparison, not single-card storytelling.
-- Treat logs, metrics, and alerts as first-class citizens in the UI.
-- Prefer deterministic operational flows over animated or marketing-heavy interactions.
+---
 
-## 12. Phase 1 Build Order
+## 8. 3D Digital Twin Architecture
 
-1. Define the route structure and information architecture.
-2. Build the landing page and demo console shell.
-3. Implement auth and technical onboarding.
-4. Add fleet overview, node detail, metrics, and logs.
-5. Connect live telemetry, alerting, and the digital twin.
-6. Harden the deployment, observability, and tenant separation.
+The robot viewer uses a layered R3F scene:
 
-## 13. Open Questions
+```
+RobotViewerClient  [use client — next/dynamic ssr:false wrapper]
+  └─ RobotViewer  [Canvas owner]
+       ├─ SceneSetup         → Background color (#07091a), FogExp2, shadow maps
+       ├─ SceneLights        → useDepthBuffer + 3 SpotLights (indigo key, amber fill, deep-blue rim)
+       ├─ Suspense
+       │    ├─ RobotModel    → useGLTF + useAnimations + Box3 auto-fit + rotation animation
+       │    ├─ BaseGlow      → Ring geometry with indigo emission (#4F46E5)
+       │    ├─ AccumulativeShadows + BakeShadows
+       │    └─ Grid          → Infinite floor grid (indigo palette)
+       ├─ EffectComposer     → Bloom (ACES filmic) + Vignette
+       └─ OrbitControls      → Drag/zoom; pan disabled
+```
 
-- Which cloud provider should host the first production environment?
-- Should the demo console share the same codebase as the authenticated app, or be isolated as a public experience?
-- Do we want the first release to support multi-tenant billing, or only tenant provisioning?
-- Which telemetry granularity is the minimum viable default for ARM nodes?
+**GLB model:** `public/models/siasunsr12a.glb`  
+⚠️ **Known limitation:** The current GLB is a CAD export without a kinematic armature. All joint segments are siblings under the root node — not a parent-child chain. Full joint articulation requires rigging in Blender with a 6-bone armature (J1–J6) before re-export.  
+**Workaround:** Smooth Y-axis rotation + micro pitch/roll oscillations simulate activity at rest.
+
+---
+
+## 9. Business Model
+
+| Tier | Price | Features |
+|---|---|---|
+| **Basic** | Per robot/month | Real-time health monitoring + manual alerts |
+| **Standard** | Per robot/month | + RUL prediction + anomaly detection |
+| **Premium** | Per robot/month | + Automated work orders + optimization + dedicated support |
+| **HaaS** | Hardware bundle | Proprietary sensor kit bundled with subscription |
+| **Consulting** | One-time fee | MES/CMMS system integration |
+
+---
+
+## 10. Phase 1 Build Order (Completed → In Progress)
+
+| # | Task | Status |
+|---|---|---|
+| 1 | Route structure + i18n architecture | ✅ Done |
+| 2 | Landing page + public marketing pages | ✅ Done |
+| 3 | Demo console (simulated fleet + alerts) | ✅ Done |
+| 4 | Interactive 3D Digital Twin viewer | ✅ Done |
+| 5 | Full `en-US` + `zh-Hans` dictionary coverage | ✅ Done |
+| 6 | Auth + technical onboarding | 🔲 Planned |
+| 7 | Fleet overview, node detail, metrics, logs, alerts | 🔲 Planned |
+| 8 | Live telemetry WebSocket + AI inference integration | 🔲 Planned |
+| 9 | GLB rigging (Blender) for joint articulation | 🔲 Planned |
+| 10 | Deployment hardening + observability + tenant isolation | 🔲 Planned |
+
+---
+
+## 11. Open Questions
+
+- Which cloud provider hosts the first production environment? (AWS, Ali Cloud, or Tencent Cloud for CN market)
+- Should the demo console share the same component library as the authenticated app, or be isolated?
+- First release: multi-tenant billing or only tenant provisioning?
+- Minimum telemetry granularity per joint for the free tier?
+- Traditional Chinese (`zh-Hant`) — priority for next locale iteration?
