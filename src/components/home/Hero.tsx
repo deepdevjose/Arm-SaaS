@@ -24,21 +24,39 @@ function HudCard({ label, value, unit, status, accent }: {
 }
 
 /* ─── Trust metrics strip ─── */
-function TrustStrip({ dict }: { dict?: any }) {
-  const items = [
-    { icon: '⬇', value: dict?.trustStat1Val ?? '35%', label: dict?.trustStat1 ?? 'Downtime reduction' },
-    { icon: '⏱', value: dict?.trustStat2Val ?? '72h', label: dict?.trustStat2 ?? 'Advance failure warning' },
-    { icon: '🤖', value: dict?.trustStat3Val ?? '6-axis', label: dict?.trustStat3 ?? 'Real-time joint monitoring' },
-    { icon: '⚡', value: dict?.trustStat4Val ?? '<100ms', label: dict?.trustStat4 ?? 'Telemetry latency' },
-  ];
+function TrustStrip() {
   return (
-    <div className="w-full max-w-5xl mx-auto mt-6 grid grid-cols-2 md:grid-cols-4 gap-3 px-4">
-      {items.map((item) => (
-        <div key={item.label} className="flex flex-col items-center gap-1 rounded-2xl border border-white/8 bg-white/3 px-4 py-4 text-center backdrop-blur-sm">
-          <span className="text-2xl font-black text-white">{item.value}</span>
-          <span className="text-[11px] text-slate-400 leading-tight">{item.label}</span>
+    <div className="w-full max-w-4xl mx-auto mt-6 flex flex-col gap-8 px-4 items-center">
+      {/* Row 1: Academic Partners */}
+      <div className="flex flex-wrap justify-center items-center gap-10 md:gap-20 opacity-50 hover:opacity-100 transition-opacity duration-500">
+        <div className="flex flex-col items-center gap-2">
+          <img src="/logos/xjtlu.svg" alt="XJTLU Logo" className="h-10 w-auto brightness-0 invert opacity-90" />
+          <span className="text-[8px] uppercase tracking-widest text-slate-500">Xi'an Jiaotong-Liverpool University</span>
         </div>
-      ))}
+        <div className="flex flex-col items-center gap-2">
+          <img src="/logos/tecnm.svg" alt="TecNM Logo" className="h-12 w-auto brightness-0 invert opacity-90" />
+          <span className="text-[8px] uppercase tracking-widest text-slate-500">Instituto Tecnológico (ITSOEH)</span>
+        </div>
+      </div>
+
+      {/* Row 2: Industrial & Standards */}
+      <div className="flex flex-wrap justify-center items-center gap-10 md:gap-20 opacity-50 hover:opacity-100 transition-opacity duration-500">
+        <div className="flex flex-col items-center gap-1">
+           <span className="text-[#ef4444] font-black text-3xl tracking-tighter">SIASUN</span>
+           <span className="text-[8px] uppercase tracking-widest text-slate-500">Hardware Integration</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+           <div className="flex items-center gap-2">
+             <div className="w-6 h-6 grid grid-cols-2 gap-0.5">
+               <div className="bg-indigo-400 rounded-sm"></div>
+               <div className="bg-indigo-400 rounded-sm"></div>
+               <div className="bg-indigo-400 rounded-sm"></div>
+             </div>
+             <span className="font-black text-2xl tracking-tight text-slate-300">ROS <span className="font-light">Industrial</span></span>
+           </div>
+           <span className="text-[8px] uppercase tracking-widest text-slate-500">Open Standards Protocol</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -127,7 +145,7 @@ export function Hero({ dict }: { dict?: any }) {
         <p className="text-center text-[11px] tracking-widest uppercase text-slate-500 mt-10 mb-4">
           {dict?.trustTitle ?? 'Trusted by industrial automation teams'}
         </p>
-        <TrustStrip dict={dict} />
+        <TrustStrip />
       </div>
     </section>
   );

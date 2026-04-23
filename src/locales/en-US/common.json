@@ -1,10 +1,10 @@
 {
   "home": {
     "eyebrow": "Live AI Monitoring — Now Available",
-    "title": "Prevent Robotic Arm Failures Before They Happen",
-    "subtitle": "Real-time AI Digital Twin for predictive maintenance, anomaly detection, and RUL estimation.",
-    "ctaStart": "Start Monitoring",
-    "ctaDemo": "Watch Demo →",
+    "title": "Stop Losing $2.3M/Hour to a Broken Bearing.",
+    "subtitle": "Our AI Digital Twin predicts component degradation 72 hours in advance, giving your maintenance team the time they need to act.",
+    "ctaStart": "Request an ROI Analysis",
+    "ctaDemo": "Watch the AI in Action",
     "disclaimer": "Live AI Simulation — SIASUN SR12A Digital Twin",
     "hudLive": "Live Twin",
     "trustTitle": "Trusted by industrial automation teams",
@@ -17,7 +17,13 @@
     "trustStat4Val": "<100ms",
     "trustStat4": "Telemetry latency",
     "processTitle": "Zero downtime for industrial robotic arms.",
-    "processDesc": "By analyzing J1-J6 joint sequences, current, temperature, and vibration in real-time, our AI instantly calculates degradation risk and schedules maintenance exactly when required.",
+    "processDesc": "From edge telemetry to predictive alerts, our 3-step architecture guarantees maximum uptime for your fleet.",
+    "step1Title": "1. Data Ingestion (IoT Edge)",
+    "step1Desc": "Direct connection to temperature, vibration, and current sensors on robotic joints.",
+    "step2Title": "2. AI Prediction (LSTM Core)",
+    "step2Desc": "Proprietary LSTM models calculate Remaining Useful Life (RUL) with >95% accuracy.",
+    "step3Title": "3. Visualization & Actuation",
+    "step3Desc": "Automatic alerts, maintenance tickets, and live 3D stress heatmaps without human intervention.",
     "splitTitle": "Real-time Digital Twins for robotic arm health.",
     "splitDesc": "Each robot is mirrored in a live 3D model, tracking joint-level degradation, thermal stress, and vibration anomalies. Detect failures before they impact production.",
     "splitCta": "View Live Digital Twin"
@@ -44,7 +50,7 @@
     "about": "About Us",
     "contact": "Contact Sales",
     "login": "SIGN IN",
-    "signup": "Start Free Trial"
+    "signup": "Request ROI Analysis"
   },
   "cta": {
     "title": "Start monitoring your robotic fleet before the next failure.",

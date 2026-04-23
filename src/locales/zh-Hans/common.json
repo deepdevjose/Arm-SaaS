@@ -1,10 +1,10 @@
 {
   "home": {
     "eyebrow": "AI 实时监控 — 现已开放",
-    "title": "在机梌臂故障发生前预先防御",
-    "subtitle": "基于 AI 的实时数字孪生，实现预测性维护、异常检测与剩余使用寿命 (RUL) 估算。",
-    "ctaStart": "立即开始监控",
-    "ctaDemo": "观看演示 →",
+    "title": "停止因轴承损坏而每小时损失 230 万美元。",
+    "subtitle": "我们的 AI 数字孪生可提前 72 小时预测组件退化，为您的维护团队争取采取行动的时间。",
+    "ctaStart": "申请 ROI 分析",
+    "ctaDemo": "观看 AI 演示",
     "disclaimer": "AI 实时仿真 — SIASUN SR12A 数字孪生",
     "hudLive": "实时孪生",
     "trustTitle": "工业自动化团队的首选",
@@ -17,7 +17,13 @@
     "trustStat4Val": "<100ms",
     "trustStat4": "遥测延迟",
     "processTitle": "工业机梌臂零停机时间。",
-    "processDesc": "通过实时分析 J1-J6 关节序列、电流、温度和振动，我们的 AI 即时计算退化风险，并在精确需要时安排维护。",
+    "processDesc": "从边缘遥测到预测性警报，我们的三步式架构可确保您的车队实现最长的正常运行时间。",
+    "step1Title": "1. 数据摄取 (IoT Edge)",
+    "step1Desc": "直接连接到机器臂关节的温度、振动和电流传感器。",
+    "step2Title": "2. AI 预测 (LSTM 核心)",
+    "step2Desc": "专有 LSTM 模型计算剩余使用寿命 (RUL)，准确率大于 95%。",
+    "step3Title": "3. 可视化与执行",
+    "step3Desc": "自动生成警报、维护工单和实时 3D 应力热力图，无需人工干预。",
     "splitTitle": "机梌臂实时数字孪生健康监测。",
     "splitDesc": "每台机器人都在实时 3D 模型中得到映射，追踪关节级的退化、热应力和振动异常。在故障影响生产前即时检测。",
     "splitCta": "查看实时数字孪生"
@@ -44,7 +50,7 @@
     "about": "关于我们",
     "contact": "联系销售",
     "login": "登录",
-    "signup": "免费试用"
+    "signup": "申请 ROI 分析"
   },
   "cta": {
     "title": "在下一次故障发生前，开始监控您的机器人资产。",
