@@ -28,14 +28,14 @@ function TrustStrip() {
   return (
     <div className="w-full max-w-4xl mx-auto mt-6 flex flex-col gap-8 px-4 items-center">
       {/* Row 1: Academic Partners */}
-      <div className="flex flex-wrap justify-center items-center gap-10 md:gap-20 opacity-50 hover:opacity-100 transition-opacity duration-500">
-        <div className="flex flex-col items-center gap-2">
-          <img src="/logos/xjtlu.svg" alt="XJTLU Logo" className="h-10 w-auto brightness-0 invert opacity-90" />
-          <span className="text-[8px] uppercase tracking-widest text-slate-500">Xi'an Jiaotong-Liverpool University</span>
+      <div className="flex flex-wrap justify-center items-center gap-10 md:gap-20">
+        <div className="flex flex-col items-center gap-3">
+          <img src="/logos/xjtlu.png" alt="XJTLU Logo" style={{ height: '45px', width: 'auto' }} />
+          <span className="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Xi'an Jiaotong-Liverpool University</span>
         </div>
-        <div className="flex flex-col items-center gap-2">
-          <img src="/logos/tecnm.svg" alt="TecNM Logo" className="h-12 w-auto brightness-0 invert opacity-90" />
-          <span className="text-[8px] uppercase tracking-widest text-slate-500">Instituto Tecnológico (ITSOEH)</span>
+        <div className="flex flex-col items-center gap-3">
+            <img src="/logos/itsoeh.png" alt="ITSOEH Logo" style={{ height: '55px', width: 'auto' }} />
+          <span className="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Instituto Tecnológico (ITSOEH)</span>
         </div>
       </div>
 

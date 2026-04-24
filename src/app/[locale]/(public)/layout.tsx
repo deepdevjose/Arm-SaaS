@@ -5,5 +5,5 @@ import { getDictionary } from '@/lib/i18n';
 export default async function PublicLayout({ children, params }: Readonly<{ children: ReactNode; params: Promise<{ locale: string }> }>) {
   const { locale } = await params;
   const dict = await getDictionary(locale);
-  return <PublicShell dict={dict.common}>{children}</PublicShell>;
+  return <PublicShell dict={dict.common} locale={locale}>{children}</PublicShell>;
 }

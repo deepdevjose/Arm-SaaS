@@ -8,6 +8,8 @@ const defaultLocale = 'en-US';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
+  const preferredLocale = locales.includes(cookieLocale ?? '') ? cookieLocale! : defaultLocale;
 
   // Skip Next.js internal paths and public files
   if (
@@ -25,9 +27,25 @@ export function middleware(request: NextRequest) {
 
   // If there's no locale prefix, redirect to the default locale
   if (!pathnameHasLocale) {
-    request.nextUrl.pathname = `/${defaultLocale}${pathname}`;
+    request.nextUrl.pathname = `/${preferredLocale}${pathname}`;
     return NextResponse.redirect(request.nextUrl);
   }
+
+  const currentLocale = locales.find(
+    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+  );
+
+  if (currentLocale && cookieLocale !== currentLocale) {
+    const response = NextResponse.next();
+    response.cookies.set('NEXT_LOCALE', currentLocale, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: 'lax',
+    });
+    return response;
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {

@@ -11,12 +11,22 @@ export function Header({ dict }: { dict?: any }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname() || '/';
   const router = useRouter();
-  
-  const isChinese = pathname.startsWith('/zh-Hans');
+
+  const localeMatch = pathname.match(/^\/(en-US|zh-Hans)(?:\/|$)/);
+  const currentLocale = localeMatch?.[1] ?? 'en-US';
+  const isChinese = currentLocale === 'zh-Hans';
+
+  const withLocale = (href: string) => {
+    if (/^(https?:|mailto:|#)/.test(href)) return href;
+    const normalized = href.startsWith('/') ? href : `/${href}`;
+    if (/^\/(en-US|zh-Hans)(?:\/|$)/.test(normalized)) return normalized;
+    return normalized === '/' ? `/${currentLocale}` : `/${currentLocale}${normalized}`;
+  };
   
   const toggleLanguage = () => {
     const targetLocale = isChinese ? 'en-US' : 'zh-Hans';
     const newPath = pathname.replace(/^\/(en-US|zh-Hans)/, `/${targetLocale}`);
+    document.cookie = `NEXT_LOCALE=${targetLocale}; path=/; max-age=31536000; samesite=lax`;
     router.push(newPath || `/${targetLocale}`);
   };
 
@@ -33,7 +43,7 @@ export function Header({ dict }: { dict?: any }) {
     <div className="header-wrapper">
       <header className={`glass-header ${isScrolled ? 'scrolled' : ''}`}>
       <div className="flex items-center gap-12">
-        <Link href="/" className="header-logo">
+        <Link href={withLocale('/')} className="header-logo">
           <Image src={iconImage} alt="Arm Health Logo" width={28} height={28} className="rounded-md" unoptimized quality={100} />
           Arm Health
         </Link>
@@ -50,26 +60,26 @@ export function Header({ dict }: { dict?: any }) {
                 {/* Left side info */}
                 <div className="w-[45%] flex flex-col relative z-10">
                    <p className="text-[14px] font-medium leading-relaxed text-slate-600">A unified platform for robotic arm health and predictive maintenance.</p>
-                   <Link href="/platform" className="text-indigo-600 font-bold text-[13px] hover:text-indigo-800 transition-colors mt-auto flex items-center gap-1 w-max">
+                   <Link href={withLocale('/platform')} className="text-indigo-600 font-bold text-[13px] hover:text-indigo-800 transition-colors mt-auto flex items-center gap-1 w-max">
                      View Platform Details &rarr;
                    </Link>
                 </div>
                 
                 {/* Right side links */}
                 <div className="w-[55%] flex flex-col justify-center gap-4 relative z-10 pl-6 border-l border-indigo-500/10">
-                   <Link href="/platform" className="flex items-center gap-3 hover:text-indigo-600 transition-colors group/link">
+                   <Link href={withLocale('/platform')} className="flex items-center gap-3 hover:text-indigo-600 transition-colors group/link">
                      <svg width="20" height="20" className="text-indigo-600 transition-transform group-hover/link:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5z M4 11h16M10 11v9"></path></svg>
                      <span className="font-bold text-[14.5px]">{dict?.overview || 'Overview'}</span>
                    </Link>
-                   <Link href="/digital-twin" className="flex items-center gap-3 hover:text-indigo-600 transition-colors group/link">
+                   <Link href={withLocale('/digital-twin')} className="flex items-center gap-3 hover:text-indigo-600 transition-colors group/link">
                      <svg width="20" height="20" className="text-indigo-600 transition-transform group-hover/link:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"></path></svg>
                      <span className="font-bold text-[14.5px]">{dict?.digitalTwin || 'Digital Twin'}</span>
                    </Link>
-                   <Link href="/ai-engine" className="flex items-center gap-3 hover:text-indigo-600 transition-colors group/link">
+                   <Link href={withLocale('/ai-engine')} className="flex items-center gap-3 hover:text-indigo-600 transition-colors group/link">
                      <svg width="20" height="20" className="text-indigo-600 transition-transform group-hover/link:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                      <span className="font-bold text-[14.5px]">{dict?.aiEngine || 'AI Engine'}</span>
                    </Link>
-                   <Link href="/fleet" className="flex items-center gap-3 hover:text-indigo-600 transition-colors group/link">
+                   <Link href={withLocale('/fleet')} className="flex items-center gap-3 hover:text-indigo-600 transition-colors group/link">
                      <svg width="20" height="20" className="text-indigo-600 transition-transform group-hover/link:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16zM3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"></path></svg>
                      <span className="font-bold text-[14.5px]">{dict?.fleet || 'Fleet Monitoring'}</span>
                    </Link>
@@ -87,23 +97,23 @@ export function Header({ dict }: { dict?: any }) {
               <div className="bg-[#f2f4fe] rounded-[24px] p-8 shadow-xl flex gap-8 text-slate-800 mt-2 border border-white/50 relative overflow-hidden">
                 <div className="w-[50%] flex flex-col relative z-10">
                    <span className="text-indigo-600 font-bold text-[12px] uppercase tracking-wider mb-4">Use Cases</span>
-                   <Link href="/" className="font-bold text-[14px] hover:text-indigo-600 mb-3 transition-colors">Manufacturing</Link>
-                   <Link href="/" className="font-bold text-[14px] hover:text-indigo-600 mb-3 transition-colors">Welding Robots</Link>
-                   <Link href="/" className="font-bold text-[14px] hover:text-indigo-600 mb-3 transition-colors">Assembly Lines</Link>
-                   <Link href="/" className="font-bold text-[14px] hover:text-indigo-600 transition-colors">Industrial Auto</Link>
+                   <Link href={withLocale('/use-cases/manufacturing')} className="font-bold text-[14px] hover:text-indigo-600 mb-3 transition-colors">{dict?.manufacturing || 'Manufacturing'}</Link>
+                   <Link href={withLocale('/use-cases/welding-robots')} className="font-bold text-[14px] hover:text-indigo-600 mb-3 transition-colors">{dict?.welding || 'Welding Robots'}</Link>
+                   <Link href={withLocale('/use-cases/assembly-lines')} className="font-bold text-[14px] hover:text-indigo-600 mb-3 transition-colors">{dict?.assembly || 'Assembly Lines'}</Link>
+                   <Link href={withLocale('/use-cases/industrial-auto')} className="font-bold text-[14px] hover:text-indigo-600 transition-colors">{dict?.industrialAuto || 'Industrial Auto'}</Link>
                 </div>
                 <div className="w-[50%] flex flex-col relative z-10 pl-6 border-l border-indigo-500/10">
                    <span className="text-indigo-600 font-bold text-[12px] uppercase tracking-wider mb-4">Capabilities</span>
-                   <Link href="/" className="font-bold text-[14px] hover:text-indigo-600 mb-3 transition-colors">Predictive Maint.</Link>
-                   <Link href="/" className="font-bold text-[14px] hover:text-indigo-600 mb-3 transition-colors">Health Monitoring</Link>
-                   <Link href="/" className="font-bold text-[14px] hover:text-indigo-600 mb-3 transition-colors">Zero Downtime</Link>
-                   <Link href="/" className="font-bold text-[14px] hover:text-indigo-600 transition-colors">Robotic Intel.</Link>
+                   <Link href={withLocale('/use-cases/manufacturing')} className="font-bold text-[14px] hover:text-indigo-600 mb-3 transition-colors">{dict?.predictiveMaint || 'Predictive Maint.'}</Link>
+                   <Link href={withLocale('/use-cases/welding-robots')} className="font-bold text-[14px] hover:text-indigo-600 mb-3 transition-colors">{dict?.healthMonitoring || 'Health Monitoring'}</Link>
+                   <Link href={withLocale('/use-cases/assembly-lines')} className="font-bold text-[14px] hover:text-indigo-600 mb-3 transition-colors">{dict?.zeroDowntime || 'Zero Downtime'}</Link>
+                   <Link href={withLocale('/use-cases/industrial-auto')} className="font-bold text-[14px] hover:text-indigo-600 transition-colors">{dict?.roboticIntel || 'Robotic Intel.'}</Link>
                 </div>
               </div>
             </div>
           </div>
           
-          <Link href="/pricing" className="header-nav-link py-4">{dict?.pricing || 'Pricing'}</Link>
+          <Link href={withLocale('/pricing')} className="header-nav-link py-4">{dict?.pricing || 'Pricing'}</Link>
           
           <div className="relative group/docs">
             <button className="header-nav-link flex items-center gap-1 py-4">
@@ -114,14 +124,14 @@ export function Header({ dict }: { dict?: any }) {
               <div className="bg-[#f2f4fe] rounded-[24px] p-8 shadow-xl flex gap-8 text-slate-800 mt-2 border border-white/50 relative overflow-hidden">
                 <div className="w-[50%] flex flex-col relative z-10">
                    <span className="text-indigo-600 font-bold text-[12px] uppercase tracking-wider mb-4">Resources</span>
-                   <Link href="/" className="font-bold text-[14px] hover:text-indigo-600 mb-3 transition-colors">Documentation</Link>
-                   <Link href="/" className="font-bold text-[14px] hover:text-indigo-600 mb-3 transition-colors">Case Studies</Link>
-                   <Link href="/" className="font-bold text-[14px] hover:text-indigo-600 transition-colors">API Reference</Link>
+                   <Link href={withLocale('/docs')} className="font-bold text-[14px] hover:text-indigo-600 mb-3 transition-colors">{dict?.docs || 'Documentation'}</Link>
+                   <Link href={withLocale('/case-studies')} className="font-bold text-[14px] hover:text-indigo-600 mb-3 transition-colors">{dict?.caseStudies || 'Case Studies'}</Link>
+                   <Link href={withLocale('/api-reference')} className="font-bold text-[14px] hover:text-indigo-600 transition-colors">API Reference</Link>
                 </div>
                 <div className="w-[50%] flex flex-col relative z-10 pl-6 border-l border-indigo-500/10">
                    <span className="text-indigo-600 font-bold text-[12px] uppercase tracking-wider mb-4">Company</span>
-                   <Link href="/" className="font-bold text-[14px] hover:text-indigo-600 mb-3 transition-colors">About Us</Link>
-                   <Link href="/" className="font-bold text-[14px] hover:text-indigo-600 transition-colors">Contact Sales</Link>
+                   <Link href={withLocale('/about')} className="font-bold text-[14px] hover:text-indigo-600 mb-3 transition-colors">{dict?.about || 'About Us'}</Link>
+                   <Link href={withLocale('/contact-sales')} className="font-bold text-[14px] hover:text-indigo-600 transition-colors">{dict?.contact || 'Contact Sales'}</Link>
                 </div>
               </div>
             </div>
@@ -138,9 +148,9 @@ export function Header({ dict }: { dict?: any }) {
           </button>
           
           <div className="absolute left-1/2 -bottom-2 w-0 h-0 opacity-0 group-hover:opacity-100 transition-all pointer-events-none group-hover:pointer-events-auto z-50">
-            <Link href="/" className="absolute social-floating-btn z-10 hover:z-20" title="WeChat" style={{ left: '-68px', top: '-15px' }}>W</Link>
-            <Link href="/" className="absolute social-floating-btn z-10 hover:z-20" title="LinkedIn" style={{ left: '-20px', top: '15px' }}>in</Link>
-            <Link href="/" className="absolute social-floating-btn z-10 hover:z-20" title="Instagram" style={{ left: '28px', top: '-15px' }}>Ig</Link>
+            <Link href={withLocale('/')} className="absolute social-floating-btn z-10 hover:z-20" title="WeChat" style={{ left: '-68px', top: '-15px' }}>W</Link>
+            <Link href={withLocale('/')} className="absolute social-floating-btn z-10 hover:z-20" title="LinkedIn" style={{ left: '-20px', top: '15px' }}>in</Link>
+            <Link href={withLocale('/')} className="absolute social-floating-btn z-10 hover:z-20" title="Instagram" style={{ left: '28px', top: '-15px' }}>Ig</Link>
           </div>
         </div>
         
@@ -152,12 +162,12 @@ export function Header({ dict }: { dict?: any }) {
         </button>
         <div className="w-[1px] h-6 bg-white/20 mx-1"></div>
         
-        <Link href="/" className="px-7 py-[9px] rounded-full bg-[#B9BEFA] text-[#0a0f25] font-bold text-[15px] hover:bg-[#4F46E5] hover:text-white transition-all duration-300 hover:shadow-[0_0_24px_rgba(185,190,250,0.5)] whitespace-nowrap">
+        <Link href={withLocale('/pricing')} className="px-7 py-[9px] rounded-full bg-[#B9BEFA] text-[#0a0f25] font-bold text-[15px] hover:bg-[#4F46E5] hover:text-white transition-all duration-300 hover:shadow-[0_0_24px_rgba(185,190,250,0.5)] whitespace-nowrap">
           {dict?.signup || 'Sign up'}
         </Link>
         
         <div className="relative group/login ml-1 flex items-center">
-          <Link href="/auth/login" className="flex items-center justify-center w-10 h-10 rounded-full border border-transparent text-white hover:text-[#B9BEFA] hover:bg-white/10 transition-colors" aria-label="Log in">
+          <Link href={withLocale('/auth/login')} className="flex items-center justify-center w-10 h-10 rounded-full border border-transparent text-white hover:text-[#B9BEFA] hover:bg-white/10 transition-colors" aria-label="Log in">
             <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
             </svg>
@@ -180,26 +190,30 @@ export function Header({ dict }: { dict?: any }) {
       {/* Mobile Menu Dropdown */}
       <div className={`lg:hidden absolute top-[100%] left-0 w-full bg-[#0a0f25]/95 backdrop-blur-xl transition-all duration-300 overflow-hidden ${isMobileMenuOpen ? 'max-h-[600px] border-b border-white/10 shadow-2xl' : 'max-h-0'}`}>
         <nav className="flex flex-col px-6 py-6 gap-2 border-t border-white/5">
-          <Link href="/platform" className="text-white hover:text-[#B9BEFA] font-medium py-3 text-[17px]">Platform</Link>
+          <Link href={withLocale('/platform')} className="text-white hover:text-[#B9BEFA] font-medium py-3 text-[17px]">Platform</Link>
           <div className="flex flex-col pl-4 border-l-2 border-indigo-500/30 ml-2 gap-2 mt-1 mb-2">
-             <Link href="/platform" className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">Overview</Link>
-             <Link href="/digital-twin" className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">Digital Twin</Link>
-             <Link href="/ai-engine" className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">AI Engine</Link>
-             <Link href="/fleet" className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">Fleet Monitoring</Link>
+             <Link href={withLocale('/platform')} className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">Overview</Link>
+             <Link href={withLocale('/digital-twin')} className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">Digital Twin</Link>
+             <Link href={withLocale('/ai-engine')} className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">AI Engine</Link>
+             <Link href={withLocale('/fleet')} className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">Fleet Monitoring</Link>
           </div>
           <span className="text-white font-medium py-2 mt-2 text-[17px]">Solutions</span>
           <div className="flex flex-col pl-4 border-l-2 border-indigo-500/30 ml-2 gap-2 mt-1 mb-2">
-             <Link href="/" className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">Use Cases</Link>
-             <Link href="/" className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">Capabilities</Link>
+             <Link href={withLocale('/use-cases/manufacturing')} className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">{dict?.manufacturing || 'Manufacturing'}</Link>
+             <Link href={withLocale('/use-cases/welding-robots')} className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">{dict?.welding || 'Welding Robots'}</Link>
+             <Link href={withLocale('/use-cases/assembly-lines')} className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">{dict?.assembly || 'Assembly Lines'}</Link>
+             <Link href={withLocale('/use-cases/industrial-auto')} className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">{dict?.industrialAuto || 'Industrial Auto'}</Link>
           </div>
           
-          <Link href="/pricing" className="text-white hover:text-[#B9BEFA] font-medium py-3 text-[17px]">Pricing</Link>
+          <Link href={withLocale('/pricing')} className="text-white hover:text-[#B9BEFA] font-medium py-3 text-[17px]">Pricing</Link>
           
           <span className="text-white font-medium py-2 mt-2 text-[17px]">Resources</span>
           <div className="flex flex-col pl-4 border-l-2 border-indigo-500/30 ml-2 gap-2 mt-1 mb-2">
-             <Link href="/" className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">Documentation</Link>
-             <Link href="/" className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">Case Studies</Link>
-             <Link href="/" className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">Company</Link>
+             <Link href={withLocale('/docs')} className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">{dict?.docs || 'Documentation'}</Link>
+             <Link href={withLocale('/case-studies')} className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">{dict?.caseStudies || 'Case Studies'}</Link>
+             <Link href={withLocale('/api-reference')} className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">API Reference</Link>
+             <Link href={withLocale('/about')} className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">{dict?.about || 'About Us'}</Link>
+             <Link href={withLocale('/contact-sales')} className="text-slate-300 hover:text-[#B9BEFA] font-medium py-1">{dict?.contact || 'Contact Sales'}</Link>
           </div>
         </nav>
       </div>

@@ -23,10 +23,10 @@ export function ContactCta({ dict }: { dict?: any }) {
               
               <h2 className="cta-heading">{dict?.title || 'Start monitoring your robotic fleet before the next failure.'}</h2>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/" className="pill-button justify-center sm:justify-start" style={{background: '#4F46E5', color: '#fff', border: 'none'}}>
-                  {dict?.demo || 'Request Demo'}
+                <Link href="/pricing" className="pill-button justify-center sm:justify-start" style={{background: '#4F46E5', color: '#fff', border: 'none'}}>
+                  See Pricing
                 </Link>
-                <Link href="/" className="pill-button pill-button-secondary justify-center sm:justify-start border-slate-300 text-slate-800 hover:bg-slate-50">
+                <Link href="/" className="pill-button justify-center sm:justify-start" style={{ background: '#ffffff', color: '#1e293b', border: '1px solid #cbd5e1' }}>
                   {dict?.talk || 'Talk to an Engineer'}
                 </Link>
               </div>
@@ -52,59 +52,6 @@ export function ContactCta({ dict }: { dict?: any }) {
         </div>
       </section>
 
-      {/* ── NEW LIGHT THEME FORM SECTION ── */}
-      <section className="bg-white border border-slate-200 rounded-3xl p-8 md:p-12 shadow-sm relative overflow-hidden animate-fade-up" style={{ animationDelay: '300ms' }}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          {/* Left side text */}
-          <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full border border-indigo-200 bg-indigo-50 text-xs tracking-widest uppercase text-indigo-600 font-semibold">
-              Enterprise Onboarding
-            </div>
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-6 tracking-tight leading-tight">
-              {dict?.title || 'Start monitoring your robotic fleet before the next failure.'}
-            </h2>
-            <p className="text-slate-500 text-lg mb-8 leading-relaxed">
-              Get a customized breakdown of how much unplanned downtime is costing your specific plant, and how our AI Digital Twin can guarantee your uptime.
-            </p>
-            <div className="flex gap-4 items-center opacity-80">
-              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-              <span className="text-sm font-semibold text-slate-700 tracking-wide">No credit card required. Hardware included.</span>
-            </div>
-          </div>
-
-          {/* Right side form */}
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 md:p-8 relative z-10">
-            <form className="flex flex-col gap-5" onSubmit={(e) => e.preventDefault()}>
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold tracking-wider text-slate-500 uppercase">Corporate Email</label>
-                <input type="email" placeholder="engineer@manufacturing.com" className="bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" required />
-              </div>
-              
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold tracking-wider text-slate-500 uppercase">Robots in Plant</label>
-                <input type="number" min="1" placeholder="e.g. 150" className="bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" required />
-              </div>
-              
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold tracking-wider text-slate-500 uppercase">Primary Manufacturer</label>
-                <select defaultValue="" className="bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors appearance-none cursor-pointer" required>
-                  <option value="" disabled>Select hardware brand...</option>
-                  <option value="abb">ABB</option>
-                  <option value="fanuc">Fanuc</option>
-                  <option value="kuka">KUKA</option>
-                  <option value="siasun">SIASUN</option>
-                  <option value="yaskawa">Yaskawa</option>
-                  <option value="other">Other / Mixed</option>
-                </select>
-              </div>
-              
-              <button type="submit" className="mt-2 w-full py-4 rounded-xl text-white font-bold text-lg shadow-[0_4px_14px_rgba(79,70,229,0.39)] hover:shadow-[0_6px_20px_rgba(79,70,229,0.23)] hover:bg-indigo-600 transition-all bg-indigo-500">
-                Request an ROI Analysis
-              </button>
-            </form>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

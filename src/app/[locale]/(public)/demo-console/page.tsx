@@ -8,7 +8,7 @@ export default async function DemoConsolePage({ params }: { params: Promise<{ lo
   const { common } = await getDictionary(locale);
   const t = common.demo;
   return (
-    <div className="mx-auto max-w-7xl px-6 py-10">
+    <div className="mx-auto max-w-7xl px-6 pb-10 pt-28 sm:pt-32">
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <Badge variant="warning">{t.tag}</Badge>
