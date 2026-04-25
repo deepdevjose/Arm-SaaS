@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { RobotViewerClient } from '@/components/three/RobotViewerClient';
 
 /* ─── Live HUD overlay cards ─── */
@@ -30,11 +31,23 @@ function TrustStrip() {
       {/* Row 1: Academic Partners */}
       <div className="flex flex-wrap justify-center items-center gap-10 md:gap-20">
         <div className="flex flex-col items-center gap-3">
-          <img src="/logos/xjtlu.png" alt="XJTLU Logo" style={{ height: '45px', width: 'auto' }} />
-          <span className="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Xi'an Jiaotong-Liverpool University</span>
+          <Image
+            src="/logos/xjtlu.png"
+            alt="XJTLU Logo"
+            width={180}
+            height={45}
+            style={{ height: '45px', width: 'auto' }}
+          />
+          <span className="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Xi&apos;an Jiaotong-Liverpool University</span>
         </div>
         <div className="flex flex-col items-center gap-3">
-            <img src="/logos/itsoeh.png" alt="ITSOEH Logo" style={{ height: '55px', width: 'auto' }} />
+            <Image
+              src="/logos/itsoeh.png"
+              alt="ITSOEH Logo"
+              width={220}
+              height={55}
+              style={{ height: '55px', width: 'auto' }}
+            />
           <span className="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Instituto Tecnológico (ITSOEH)</span>
         </div>
       </div>
