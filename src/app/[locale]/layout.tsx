@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { IBM_Plex_Mono, Sora } from 'next/font/google';
 import type { ReactNode } from 'react';
+import { Analytics } from '@vercel/analytics/next';
 import '../globals.css';
 
 const sora = Sora({
@@ -24,7 +25,10 @@ export default async function RootLayout({ children, params }: { children: React
   
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={`${sora.variable} ${plexMono.variable}`}>{children}</body>
+      <body className={`${sora.variable} ${plexMono.variable}`}>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }

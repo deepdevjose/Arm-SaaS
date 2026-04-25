@@ -11,12 +11,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@opennextjs/cloudflare": "^1.19.1",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
     "@react-three/postprocessing": "^3.0.4",
     "@types/three": "^0.183.1",
+    "@vercel/analytics": "^2.0.1",
     "next": "15.5.15",
-    "@opennextjs/cloudflare": "^1.19.1",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "three": "^0.183.2",
